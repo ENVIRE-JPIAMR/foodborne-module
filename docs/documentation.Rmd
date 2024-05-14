@@ -1,0 +1,111 @@
+---
+title: "Foodborne module"
+output:
+  pdf_document:
+    citation_package: natbib
+    keep_tex: true
+bibliography: reference.bib
+---
+
+This document presents an informal documentation of the foodborne module based 
+on the studies @collineau20 and @faverjon22. The foodborne module consists of 
+four submodules that model different stages of broiler production, namely:
+
+- Production submodule
+  - Flock stage
+  - Transport stage
+- Processing submodule
+  - Scalding stage
+  - Defeathering stage
+  - Evisceration stage
+  - Washing stage
+  - Chilling stage
+  - Portioning stage
+- Post-processing submodule
+- Home preparation submodule
+
+At the end of each submodule (stage) the module simulates 1) prevalence of 
+infected birds in a flock and 2) the total number of bacterias on the carcasses. 
+
+## Production submodule
+
+Inputs: C_barn, Prev_wfp_col_base
+
+Outputs: C_prod_p, Prev_prod_p, C_prod_n, Prev_prod_n
+
+subscripts p (positive) and n (negative) denotes the infection status of the 
+broiler flock.
+
+### Flock stage: 
+
+Same framework as proposed by @collineau20 with the following modification in 
+parameter values.
+
+
+```{r, include=FALSE}
+# Load the knitr package
+library(knitr)
+
+# Create a sample data frame
+flock <- data.frame(
+  Symbol = c("Prev_Farm_type", "C_barn", "Prev_wfp_col_base"),
+  Value  = c("Beta$(26, 164)$", "From farm module", "From farm module"),
+  Source = c("FSA", "ENVIRE", "ENVIRE")
+)
+
+transport <- data.frame(
+  Symbol = c("C_prod_n"),
+  Value  = c("Triangular$(26, 164)$"),
+  Source = c("FSA")
+)
+
+scalding <- data.frame(
+  Symbol = c("F_scald_soft"),
+  Value  = c("Normal$(4.16, 1.08)$"),
+  Source = c("FSA")
+)
+
+evis <- data.frame(
+  Symbol = c("C_caecal"),
+  Value  = c("Triangular$(0.54, 8.69, 8.83)$"),
+  Source = c("FSA")
+)
+```
+```{r}
+kable(flock, caption = "Change in parameters for flock stage") 
+```
+### Transport stage: 
+
+Same framework as proposed by @collineau20 with the following modification in 
+parameter value.
+
+```{r}
+kable(transport, caption = "Change in parameters for flock stage") 
+```
+## Processing submodule
+
+At each submodule the prevalence and number of bacterias are updated and used as
+inputs for the next submodule.
+
+Inputs: C_prod_p, Prev_prod_p, C_prod_n, Prev_prod_n
+
+Outputs: C_chill_p, Prev_chill_p, C_chill_n, Prev_chill_n
+
+### Scalding stage:
+
+Following the same principle as @collineau20, only soft scalding is considered 
+with the following reduction rate:
+```{r}
+kable(scalding, caption = "Change in parameters for scalding stage") 
+```
+
+### Defeathering stage:
+
+Same as @collineau20.
+
+### Evisceration stage:
+
+Same as @collineau20 with following updated parameters.
+```{r}
+kable(evis, caption = "Change in parameters for scalding stage") 
+```
