@@ -1,5 +1,5 @@
 ## Production module
-#TODO: create environment
+#TODO: create environment w/ argument Runs
 
 #flock prevalence of AMR 
 data$Prev_f <- data$Prev_farm_type
@@ -34,6 +34,6 @@ data$Prev_prod <- ifelse(data$Prev_prod >1,1, data$Prev_prod)
 
 #Number of bacteria on positive birds exterior after transport
 data$C_prod <- ifelse(data$B_flock_status=="p", 
-                      data$C_btp * data$F_transp,
+                      data$C_btp * data$F_transp,  
                       data$C_prod_n)
 

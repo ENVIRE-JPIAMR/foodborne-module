@@ -8,8 +8,6 @@ Runs <- 10 # number of simulation to be performed
 # Define column names
 namesData <-
   c(
-    "Product_cut",
-    "Meat_skin",
     "Pack_type",
     "Product_wash"
   )
@@ -19,8 +17,6 @@ data <- as.data.frame(matrix(0, nrow = Runs, ncol = length(namesData)))
 colnames(data) <- namesData
 
 # Assign values to selected variables
-data$Product_cut   <- "yes"
-data$Meat_skin     <- "skin off"
 data$Pack_type     <- "None"
 data$Product_wash  <- "pre-washed"
 

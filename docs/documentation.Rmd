@@ -29,83 +29,358 @@ infected birds in a flock and 2) the total number of bacterias on the carcasses.
 
 ## Production submodule
 
-Inputs: C_barn, Prev_wfp_col_base
-
-Outputs: C_prod_p, Prev_prod_p, C_prod_n, Prev_prod_n
-
-subscripts p (positive) and n (negative) denotes the infection status of the 
-broiler flock.
-
-### Flock stage: 
-
-Same framework as proposed by @collineau20 with the following modification in 
-parameter values.
-
+The production submodule is divided into two stages namely, the flock stage and
+the transport stage. The same framework is followed as proposed by @collineau20 
+with the following modification in parameter values.
 
 ```{r, include=FALSE}
 # Load the knitr package
 library(knitr)
 
-# Create a sample data frame
-flock <- data.frame(
-  Symbol = c("Prev_Farm_type", "C_barn", "Prev_wfp_col_base"),
-  Value  = c("Beta$(26, 164)$", "From farm module", "From farm module"),
-  Source = c("FSA", "ENVIRE", "ENVIRE")
+# Production submodule
+production_inputs <- data.frame(
+  Type = c(c("Input", "Input"), rep("Parameter", 9)),
+  Symbol   = c(
+    "C_barn",
+    "Prev_wfp_col_base",
+    "Prev_Farm_type",
+    "Prev_wfp_ext.min",
+    "Prev_wfp_ext.max",
+    "F_cross_trans",
+    "F_transp",
+    "C_prod_n",
+    "Amount_fec",
+    "N_transp",
+    "N_contact"
+  ),
+  Value    = c(
+    "Farm module",
+    "Farm module",
+    "Beta$(26, 164)$",
+    "$0.03$",
+    "$0.5$",
+    "U$(0, 0.5)$",
+    "$1.41$",
+    "Tri$(4.4,4.8,4.6)$",
+    "Tri$(1,50,10)$",
+    "U$(0,4)$",
+    "Pert$(1.5, 4.5, 3)$"
+  ),
+  Source   = c(
+    "Sarnino et al. (in prep.)",
+    "Sarnino et al. (in prep.)",
+    "Huijbers et al. (2014); Daniel (2020)",
+    "Collineau et al. (2020)",
+    "Collineau et al.(2020)", 
+    "Bucher et al. (2012)",
+    "Collineau et al. (2020)",
+    "Berrang et Northcutt (2005)",
+    "Collineau et al. (2020)",
+    "Bucher et al. (2012)",
+    "Bucher et al. (2012)"
+  )
 )
 
-transport <- data.frame(
-  Symbol = c("C_prod_n"),
-  Value  = c("Triangular$(26, 164)$"),
-  Source = c("FSA")
-)
+# production submodule dataframe
 
-scalding <- data.frame(
-  Symbol = c("F_scald_soft"),
-  Value  = c("Normal$(4.16, 1.08)$"),
-  Source = c("FSA")
-)
-
-evis <- data.frame(
-  Symbol = c("C_caecal"),
-  Value  = c("Triangular$(0.54, 8.69, 8.83)$"),
-  Source = c("FSA")
+production_calcul <- data.frame(
+  Type = c(rep("Variable", 8), rep("Output", 4)),
+  Symbol = c("Prev_f", 
+             "B_flock_status", 
+             "Prev_wfp_col", 
+             "C_btp", 
+             "Prev_wfp_ext", 
+             "P_ccbf",
+             "P_ccwf",
+             "P_pos",
+             "Prev_prod_p",
+             "Prev_prod_n",
+             "C_prod_p",
+             "C_prod_n"),
+  Value = c("Prev_Farm_type",
+            "rbinom(1, Prev_f)",
+            "Prev_wfp_col_base",
+            "C_barn * Amount_fec",
+            "Pert(Prev_wfp_ext.min, Prev_wfp_col, Prev_wfp_ext.max)",
+            "(1 - (1 - Prev_f)^N_transp) * F_cross_trans",
+            "1 - (1- Prev_wfp_ext)^N_contact",
+            "P_ccwf + P_ccbf - (P_ccwf * P_ccbf)",
+            "Prev_wfp_ext + (1- Prev_wfp_ext) * P_pos",
+            "P_ccbf",
+            "C_btp * F_transp",
+            "C_prod_n")
 )
 ```
 ```{r}
-kable(flock, caption = "Change in parameters for flock stage") 
-```
-### Transport stage: 
-
-Same framework as proposed by @collineau20 with the following modification in 
-parameter value.
-
-```{r}
-kable(transport, caption = "Change in parameters for flock stage") 
+kable(production_inputs, caption = "Production module inputs")
+kable(production_calcul, caption = "Production module variables")
 ```
 ## Processing submodule
 
-At each submodule the prevalence and number of bacterias are updated and used as
-inputs for the next submodule.
+The processing module is divided in six stages namely, scalding, defeathering,
+evisceration, washing, chilling and portioning. At each stage the prevalence and
+number of bacterias are updated and used as inputs for the next stage/submodule.
 
 Inputs: C_prod_p, Prev_prod_p, C_prod_n, Prev_prod_n
 
-Outputs: C_chill_p, Prev_chill_p, C_chill_n, Prev_chill_n
+Outputs: C_proc_p, Prev_proc_p, C_proc_n, Prev_proc_n
 
 ### Scalding stage:
 
 Following the same principle as @collineau20, only soft scalding is considered 
-with the following reduction rate:
-```{r}
-kable(scalding, caption = "Change in parameters for scalding stage") 
+with reduction rate from @althaus17:
+```{r, include=FALSE}
+# Production submodule
+scalding <- data.frame(
+  Type = c(rep("Input", 4), rep("Parameter", 3), rep("Variable", 2), 
+               rep("Output", 4)),
+  Symbol   = c(
+    "Prev_prod_p",
+    "Prev_prod_n",
+    "C_prod_p",
+    "C_prod_n",
+    "C_prod.min",
+    "C_prod.max",
+    "F_scald_soft",
+    "Prop_scald",
+    "Th_scald",
+    "Prev_scald_p",
+    "Prev_scald_n",
+    "C_scald_p",
+    "C_scald_n"
+  ),
+  Value    = c(
+    "Prod. module",
+    "Prod. module",
+    "Prod. module",
+    "Prod. module",
+    "$5.5$",
+    "$6.5$",
+    "N$(4.16, 1.08)$",
+    "10^(-F_scald_soft)",
+    "U(1, 10^C_prod.min, 10^C_prod.max)",
+    "ifelse(C_scald_p$>$Th_scald, 1, Prev_prod_p)",
+    "ifelse(C_scald_n$>$Th_scald, 1, Prev_prod_n)",
+    "C_prod_p * Prop_scald",
+    "C_prod_p * Prop_scald"
+  )
+)
 ```
-
+```{r}
+kable(scalding, caption = "Processing module: scalding stage") 
+```
 ### Defeathering stage:
 
 Same as @collineau20.
 
+```{r, include=FALSE}
+defeathering <- data.frame(
+  Type = c(rep("Input", 4), rep("Parameter", 5), rep("Output", 4)),
+  Symbol   = c(
+    "Prev_scald_p",
+    "Prev_scald_n",
+    "C_scald_p",
+    "C_scald_n",
+    "a_df",
+    "b_df",
+    "F_df",
+    "P_cross_df_p",
+    "P_cross_df_n",
+    "Prev_scald_p",
+    "Prev_scald_n",
+    "C_df_p",
+    "C_df_n"
+  ),
+  Value    = c(
+    "Scalding",
+    "Scalding",
+    "Scalding",
+    "Scalding",
+    "$-1.91$",
+    "$-1.95$",
+    "Tri$(-4.01, -2.45, -0.89)$",
+    "0.6",
+    "N$(0.02, 0.000557) [0,1]$",
+    "Collineau et al. (2020)",
+    "Collineau et al. (2020)",
+    "Collineau et al. (2020)",
+    "Collineau et al. (2020)"
+  )
+)
+
+```
+```{r}
+kable(defeathering, caption = "Processing module: defeathering stage") 
+```
 ### Evisceration stage:
 
-Same as @collineau20 with following updated parameters.
+Same as @collineau20 with updated parameters, namely, C_caecal from @robe19 and 
+F_ev from @faverjon22.
+
+```{r, include=FALSE}
+evisceration <- data.frame(
+  Type = c(rep("Input", 4), rep("Parameter", 5), rep("Output", 4)),
+  Symbol   = c(
+    "Prev_df_p",
+    "Prev_df_n",
+    "C_df_p",
+    "C_df_n",
+    "C_caecal",
+    "P_cross_ev_p",
+    "F_ev",
+    "P_cut_vis",
+    "spill_weight",
+    "Prev_ev_p",
+    "Prev_ev_n",
+    "C_ev_p",
+    "C_ev_n"
+  ),
+  Value    = c(
+    "defeathering",
+    "defeathering",
+    "defeathering",
+    "defeathering",
+    "Tri$(0.54, 8.83, 8.69)$",
+    "Tri$(0.03,	0.15,	0.07)$",
+    "Tri$(0.06,	0.12,	0.091)$",
+    "Tri$(0.14,	0.23,	0.18)$",
+    "U$(1, 10)$",
+    "Collineau et al. (2020)",
+    "Collineau et al. (2020)",
+    "Collineau et al. (2020)",
+    "Collineau et al. (2020)"
+  )
+)
+
+```
 ```{r}
-kable(evis, caption = "Change in parameters for scalding stage") 
+kable(evisceration, caption = "Processing module: evisceration stage") 
+```
+### Washing stage:
+
+Following the discussion with Fédération des Industries Avicoles (FIA), two types 
+of washing are implemented, namely, Inside Outside Bird Wash (IOBW) and IOBW along 
+with Post Evisceration (PE) wash. About $50\%-75\%$ of the farms practice two types
+of washing which translates to the indicator variable wash_type. Parameters are 
+taken from @collineau20.
+
+```{r, include=FALSE}
+washing <- data.frame(
+  Type = c(rep("Input", 4), rep("Parameter", 4), rep("Variable", 3), rep("Output", 4)),
+  Symbol   = c(
+    "Prev_ev_p",
+    "Prev_ev_n",
+    "C_ev_p",
+    "C_ev_n",
+    "wash_type",
+    "F_wash_IOBW",
+    "F_wash_PE",
+    "F_wash_adj",
+    "wash_type",
+    "Prop_wash_init",
+    "Prop_wash",
+    "Prev_wash_p",
+    "Prev_wash_n",
+    "C_wash_p",
+    "C_wash_n"
+  ),
+  Value    = c(
+    "evisceration",
+    "evisceration",
+    "evisceration",
+    "evisceration",
+    "ifelse($Y_{U[0, 1]}>0.625$, IOBW, IOBW+PE)",
+    "Tri$(-1.29,	-0.92,	-0.55)$",
+    "Tri$(-1.28,	-1.17,	-1.06)$",
+    "U$(0,	0.5)$",
+    "U$(0, 1)$",
+    "ifelse(wash_type$>0.625$, 10^F_wash_IOBW, 10^(F_wash_IOBW+F_wash_PE))",
+    "Prop_wash_init + (1 + F_wash_adj)",
+    "Prev_ev_p",
+    "Prev_ev_n",
+    "C_ev_p * Prop_wash",
+    "C_ev_n * Prop_wash"
+  )
+)
+```
+```{r}
+kable(washing, caption = "Processing module: washing stage") 
+```
+### Chilling stage:
+
+Following the discussion with Fédération des Industries Avicoles (FIA), two types 
+of chilling are identified, namely, Air Chilling (AC) and Water Immersion Chilling 
+(WIC). However the later is practiced for less than $2\%$ of the producers and thus
+not implemented in the model. Moreover AC does not have the chance of cross 
+contamination unlike WIC.
+
+```{r, include=FALSE}
+chilling <- data.frame(
+  Type = c(rep("Input", 4), rep("Parameter", 1), rep("Output", 4)),
+  Symbol   = c(
+    "Prev_wash_p",
+    "Prev_wash_n",
+    "C_wash_p",
+    "C_wash_n",
+    "Prop_chill",
+    "Prev_chill_p",
+    "Prev_chill_n",
+    "C_chill_p",
+    "C_chill_n"
+  ),
+  Value    = c(
+    "washing",
+    "washing",
+    "washing",
+    "washing",
+    "Pert$(10^{0.308}/10^{1.6}, 10^{0.7}/10^{1.6}, 10^{1.092}/10^{1.6})$",
+    "Prev_wash_p",
+    "Prev_wash_n",
+    "C_wash_p * Prop_chill",
+    "C_wash_n * Prop_chill"
+  )
+)
+```
+```{r}
+kable(chilling, caption = "Processing module: chilling stage") 
+```
+### Portioning stage:
+
+Same as @collineau20 with the product type, namely, chicken breasts or whole 
+carcasses is determined by an additional parameter Prop_product signifying the 
+fraction of the raw product that represents the final processed product.
+
+```{r, include=FALSE}
+portioning <- data.frame(
+  Type = c(rep("Input", 4), rep("Parameter", 3), rep("Output", 4)),
+  Symbol   = c(
+    "Prev_chill_p",
+    "Prev_chill_n",
+    "C_chill_p",
+    "C_chill_n",
+    "Prop_cm",
+    "P_skin",
+    "Prop_product",
+    "Prev_proc_p",
+    "Prev_proc_n",
+    "C_proc_p",
+    "C_proc_n"
+  ),
+  Value    = c(
+    "chilling",
+    "chilling",
+    "chilling",
+    "chilling",
+    "Pert$(0.01, 0.02, 1)$",
+    "Beta$(1, 3.15)$",
+    "0.25",
+    "Prev_chill_p",
+    "Prev_chill_n",
+    "ifelse(Prop_product==1, C_chill_p, C_chill_p * P_skin * Prop_cm * Prop_product)",
+    "ifelse(Prop_product==1, C_chill_n, C_chill_n * P_skin * Prop_cm * Prop_product)"
+  )
+)
+```
+```{r}
+kable(portioning, caption = "Processing module: portioning stage") 
 ```
