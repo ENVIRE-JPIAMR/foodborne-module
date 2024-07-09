@@ -22,6 +22,9 @@ four submodules that model different stages of broiler production, namely:
   - Chilling stage
   - Portioning stage
 - Post-processing submodule
+  - Retail stage
+  - Consumer transport stage
+  - Home storage stage
 - Home preparation submodule
 
 At the end of each submodule (stage) the module simulates 1) prevalence of 
@@ -384,3 +387,129 @@ portioning <- data.frame(
 ```{r}
 kable(portioning, caption = "Processing module: portioning stage") 
 ```
+
+## Post-processing submodule
+  
+The post-processing sublmodule is divided into three main stages, namely, retail 
+stage, consumer transport stage and home storage stage. The bacteria load changes
+throughout these stages but the prevalence reamins the same. The final output 
+prevalence at the end of the post-processing step is adjusted w.r.t the final load
+(see, e.g., @collineau20).The effect os packaging on the bacteria load is also taken
+into account, based on @faverjon22 and discussions with FIA. The module parameters 
+related to bacteria growth are taken from @faverjon22 and the basic framework is
+adapted from @collineau20.
+
+Inputs: C_proc_p, Prev_proc_p, C_proc_n, Prev_proc_n
+
+Outputs: C_pproc_p, Prev_pproc_p, C_pproc_n, Prev_pproc_n
+
+```{r, include=FALSE}
+pprocessing <- data.frame(
+  Type = c(rep("Input", 4), rep("Parameter", 19)),
+  Symbol   = c(
+    "Prev_proc_p",
+    "Prev_proc_n",
+    "C_proc_p",
+    "C_proc_n",
+    "T_growth_min",
+    "T_growth_opt",
+    "F_pack",
+    "F_freezer",
+    "Time_gen_min",
+    "C_MPD",
+    "Carcass_size_mean",
+    "Carcass_size_sd",
+    "Breast_size_mean",
+    "Breast_size_sd",
+    "Prop_carc_yield",
+    "Time_retail",
+    "Time_trans",
+    "Time_fridge",
+    "T_retail",
+    "T_post_trans",
+    "T_fridge",
+    "Prop_breast_MAP",
+    "Prop_carcass_fresh"
+  ),
+  Value    = c(
+    "processing",
+    "processing",
+    "processing",
+    "processing",
+    "$7$",
+    "Pert$(35, 40, 37)$",
+    "Tri$(-0.3,	-0.1,	-0.2)$",
+    "$0.33$",
+    "$0.47$",
+    "123000",
+    "1495.3",
+    "303.4",
+    "111.6",
+    "71.9",
+    "U$(0.6, 0.65)$",
+    "Tri$(1, 7, 3)$",
+    "N$(69.6, 0.438)$",
+    "N$(2.2, 0.0203)$",
+    "Laplace$(3.3333, 2.6623, [-6.67, 19.44])$",
+    "Sftd.Logistic$(-22.915, 29.371, 16.763, [-5.56, 20])$",
+    "Laplace$(5.3, 2.2965, [-4.44, 16.11])$",
+    "$0.75$",
+    "$0.85$"
+  )
+)
+
+pprocessing_calcul <- data.frame(
+  Type = c(rep("Variables", 16), rep("Output", 4)),
+  Symbol   = c(
+    "breast_size",
+    "carcass_size_init",
+    "carcass_size",
+    "Size",
+    "C_max",
+    "T_avg_trans",
+    "Time_gen_retail",
+    "Time_gen_trans",
+    "Time_gen_fridge",
+    "G_retail",
+    "G_trans",
+    "G_fridge",
+    "C_ret",
+    "Carcass_fresh",
+    "Breast_MAP",
+    "C_pack",
+    "C_pproc_p",
+    "C_pproc_n",
+    "Prev_pproc_p",
+    "Prev_pproc_n"
+  ),
+  Value    = c(
+    "Gamma((mean / sd)^2, sd^2 / mean",
+    "Gamma((mean / sd)^2, sd^2 / mean",
+    "Prop_carc_yield * carcass_size_init",
+    "ifelse(Prop_product == 1, carcass_size, breast_size)",
+    "C_MPD * Size",
+    "(T_retail + T_post_trans)/2",
+    "(2) in Collineau et al. (2020)",
+    "(2) in Collineau et al. (2020)",
+    "(2) in Collineau et al. (2020)",
+    "(1) in Collineau et al. (2020)",
+    "(1) in Collineau et al. (2020)",
+    "(1) in Collineau et al. (2020)",
+    "C_proc_i * G_retail * G_trans * G_fridge",
+    "Bin(Runs, Prop_carcass_fresh)",
+    "Bin(Runs, Prop_breast_MAP)",
+    "Based on FIA, Faverjon et al. (2022) and Collineau et al. (2020)",
+    "(3) in Collineau et al. (2020) on C_pack",
+    "(3) in Collineau et al. (2020) on C_pack",
+    "(4) in Collineau et al. (2020) on C_pproc_p",
+    "(4) in Collineau et al. (2020) on C_pproc_n"
+  )
+)
+```
+```{r}
+kable(pprocessing, caption = "Post-processing module: inputs and parameters") 
+kable(pprocessing_calcul, caption = "Post-processing module: variables and outputs") 
+```
+
+
+
