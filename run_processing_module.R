@@ -5,20 +5,9 @@ source(here::here("utilities/estimate_variables.R"))
 
 Runs <- 10 # number of simulation to be performed
 
-# Define column names
-namesData <-
-  c(
-    "Pack_type",
-    "Product_wash"
-  )
-
 # Create dataframe with specified number of rows and column names
-data <- as.data.frame(matrix(0, nrow = Runs, ncol = length(namesData)))
-colnames(data) <- namesData
-
-# Assign values to selected variables
-data$Pack_type     <- "None"
-data$Product_wash  <- "pre-washed"
+data <- data.frame(matrix(1:Runs, nrow = Runs, ncol = 1))
+colnames(data) <- "Runs"
 
 # Load estimated variables metadata
 input <- read_excel("data-input/estimated_variables.xlsx")

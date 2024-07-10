@@ -72,15 +72,15 @@ production_inputs <- data.frame(
   Source   = c(
     "Sarnino et al. (in prep.)",
     "Sarnino et al. (in prep.)",
-    "Huijbers et al. (2014); Daniel (2020)",
+    "Faverjon et al. (2022)",
     "Collineau et al. (2020)",
     "Collineau et al.(2020)", 
-    "Bucher et al. (2012)",
+    "Collineau et al.(2020)",
     "Collineau et al. (2020)",
-    "Berrang et Northcutt (2005)",
+    "Faverjon et al. (2022)",
     "Collineau et al. (2020)",
-    "Bucher et al. (2012)",
-    "Bucher et al. (2012)"
+    "Collineau et al. (2020)",
+    "Collineau et al. (2020)"
   )
 )
 
@@ -131,7 +131,7 @@ Outputs: C_proc_p, Prev_proc_p, C_proc_n, Prev_proc_n
 ### Scalding stage:
 
 Following the same principle as @collineau20, only soft scalding is considered 
-with reduction rate from @althaus17:
+with reduction rate F_scald_soft from @althaus17 (@faverjon22):
 ```{r, include=FALSE}
 # Production submodule
 scalding <- data.frame(
@@ -218,7 +218,7 @@ kable(defeathering, caption = "Processing module: defeathering stage")
 ### Evisceration stage:
 
 Same as @collineau20 with updated parameters, namely, C_caecal from @robe19 and 
-F_ev from @faverjon22.
+F_ev from @belluco16 (@faverjon22).
 
 ```{r, include=FALSE}
 evisceration <- data.frame(
@@ -315,7 +315,7 @@ Following the discussion with Fédération des Industries Avicoles (FIA), two ty
 of chilling are identified, namely, Air Chilling (AC) and Water Immersion Chilling 
 (WIC). However the later is practiced for less than $2\%$ of the producers and thus
 not implemented in the model. Moreover AC does not have the chance of cross 
-contamination unlike WIC.
+contamination unlike WIC. Parameters are taken from @collineau20.
 
 ```{r, include=FALSE}
 chilling <- data.frame(
@@ -350,8 +350,9 @@ kable(chilling, caption = "Processing module: chilling stage")
 ### Portioning stage:
 
 Same as @collineau20 with the product type, namely, chicken breasts or whole 
-carcasses is determined by an additional parameter Prop_product signifying the 
-fraction of the raw product that represents the final processed product.
+carcasses is determined by an additional parameter Prop_product (see, e.g., 
+@faverjon22) signifying the fraction of the raw product that represents the final 
+processed product.
 
 ```{r, include=FALSE}
 portioning <- data.frame(
@@ -498,11 +499,11 @@ pprocessing_calcul <- data.frame(
     "C_proc_i * G_retail * G_trans * G_fridge",
     "Bin(Runs, Prop_carcass_fresh)",
     "Bin(Runs, Prop_breast_MAP)",
-    "Based on FIA, Faverjon et al. (2022) and Collineau et al. (2020)",
-    "(3) in Collineau et al. (2020) on C_pack",
-    "(3) in Collineau et al. (2020) on C_pack",
-    "(4) in Collineau et al. (2020) on C_pproc_p",
-    "(4) in Collineau et al. (2020) on C_pproc_n"
+    "Based on FIA, Faverjon et al. (2022) and Collineau et al. (2020) on C_ret",
+    "(4) in Collineau et al. (2020) on C_pack",
+    "(4) in Collineau et al. (2020) on C_pack",
+    "(3) in Collineau et al. (2020) on C_pproc_p and Prev_proc_p",
+    "(3) in Collineau et al. (2020) on C_pproc_n and Prev_proc_n"
   )
 )
 ```
@@ -510,6 +511,83 @@ pprocessing_calcul <- data.frame(
 kable(pprocessing, caption = "Post-processing module: inputs and parameters") 
 kable(pprocessing_calcul, caption = "Post-processing module: variables and outputs") 
 ```
+## Home preparation submodule
+
+Based on @collineau20
+
+```{r, include=FALSE}
+homeprep <- data.frame(
+  Type = c(rep("Input", 4), rep("Parameter", 10), rep("Variable", 7), rep("Output", 8)),
+  Symbol   = c(
+    "Prev_pproc_p",
+    "Prev_pproc_n",
+    "C_pproc_p",
+    "C_pproc_n",
+    "Prop_protec",
+    "Prop_fluid",
+    "P_undercook",
+    "V_dil_car",
+    "D_value_alpha",
+    "D_value_beta",
+    "Time_protec",
+    "T_protec",
+    "P_h_wash",
+    "V_ing",
+    "V_dil",
+    "R_ref",
+    "tsf",
+    "P_cc_p",
+    "P_cc_n",
+    "C_cc_p",
+    "C_cc_n",
+    "Prev_home_cook_p",
+    "Prev_home_cook_n",
+    "P_home_cc_p",
+    "P_home_cc_n",
+    "C_home_cook_p",
+    "C_home_cook_n",
+    "C_home_cc_p",
+    "C_home_cc_n"
+  ),
+  Value    = c(
+    "Post-proc. module",
+    "Post-proc. module",
+    "Post-proc. module",
+    "Post-proc. module",
+    "Pert$(0.1, 0.2, 0.16)$",
+    "U$(0.01, 0.1)$",
+    "N$(0.4, 0.00212)$",
+    "U$(150, 250)$",
+    "$8.58$",
+    "$-0.139$",
+    "Pert$(0.5, 1.5, 1)$",
+    "Pert$(60, 65, 64)$",
+    "U$(0.38, 1)$",
+    "U$(0.5, 1.5)$",
+    "Collineau et al. (2020)",
+    "10^(D_value_beta * T_protec + D_value_alpha)",
+    "Prop_fluid * V_ing / V_dil",
+    "P_h_wash * Prev_pproc_p",
+    "P_h_wash * Prev_pproc_n",
+    "tsf * C_pproc_p",
+    "tsf * C_pproc_n",
+    "P_undercook * Prev_pproc_p",
+    "P_undercook * Prev_pproc_n",
+    "P_cc_p * (1- dpois(0, C_cc_p))",
+    "P_cc_n * (1- dpois(0, C_cc_n))",
+    "Prop_protec * 10^(log(C_pproc_p) - Time_protec / R_ref)",
+    "Prop_protec * 10^(log(C_pproc_n) - Time_protec / R_ref)",
+    "ifelse(C_cc_p <1, 1, C_cc_p)",
+    "ifelse(C_cc_n <1, 1, C_cc_n)"
+  )
+)
+```
+```{r}
+kable(homeprep, caption = "Home preparation module") 
+```
+
+
+
 
 
 
