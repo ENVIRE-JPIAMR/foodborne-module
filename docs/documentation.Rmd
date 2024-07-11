@@ -513,41 +513,28 @@ kable(pprocessing_calcul, caption = "Post-processing module: variables and outpu
 ```
 ## Home preparation submodule
 
-Based on @collineau20
+Based on @collineau20 without the corss-contamination part since only Air chilling 
+(AC) is implemented.
 
 ```{r, include=FALSE}
 homeprep <- data.frame(
-  Type = c(rep("Input", 4), rep("Parameter", 10), rep("Variable", 7), rep("Output", 8)),
+  Type = c(rep("Input", 4), rep("Parameter", 6), rep("Variable", 1), rep("Output", 4)),
   Symbol   = c(
     "Prev_pproc_p",
     "Prev_pproc_n",
     "C_pproc_p",
     "C_pproc_n",
     "Prop_protec",
-    "Prop_fluid",
     "P_undercook",
-    "V_dil_car",
     "D_value_alpha",
     "D_value_beta",
     "Time_protec",
     "T_protec",
-    "P_h_wash",
-    "V_ing",
-    "V_dil",
     "R_ref",
-    "tsf",
-    "P_cc_p",
-    "P_cc_n",
-    "C_cc_p",
-    "C_cc_n",
     "Prev_home_cook_p",
     "Prev_home_cook_n",
-    "P_home_cc_p",
-    "P_home_cc_n",
     "C_home_cook_p",
-    "C_home_cook_n",
-    "C_home_cc_p",
-    "C_home_cc_n"
+    "C_home_cook_n"
   ),
   Value    = c(
     "Post-proc. module",
@@ -555,30 +542,16 @@ homeprep <- data.frame(
     "Post-proc. module",
     "Post-proc. module",
     "Pert$(0.1, 0.2, 0.16)$",
-    "U$(0.01, 0.1)$",
     "N$(0.4, 0.00212)$",
-    "U$(150, 250)$",
     "$8.58$",
     "$-0.139$",
     "Pert$(0.5, 1.5, 1)$",
     "Pert$(60, 65, 64)$",
-    "U$(0.38, 1)$",
-    "U$(0.5, 1.5)$",
-    "Collineau et al. (2020)",
     "10^(D_value_beta * T_protec + D_value_alpha)",
-    "Prop_fluid * V_ing / V_dil",
-    "P_h_wash * Prev_pproc_p",
-    "P_h_wash * Prev_pproc_n",
-    "tsf * C_pproc_p",
-    "tsf * C_pproc_n",
     "P_undercook * Prev_pproc_p",
     "P_undercook * Prev_pproc_n",
-    "P_cc_p * (1- dpois(0, C_cc_p))",
-    "P_cc_n * (1- dpois(0, C_cc_n))",
     "Prop_protec * 10^(log(C_pproc_p) - Time_protec / R_ref)",
-    "Prop_protec * 10^(log(C_pproc_n) - Time_protec / R_ref)",
-    "ifelse(C_cc_p <1, 1, C_cc_p)",
-    "ifelse(C_cc_n <1, 1, C_cc_n)"
+    "Prop_protec * 10^(log(C_pproc_n) - Time_protec / R_ref)"
   )
 )
 ```
