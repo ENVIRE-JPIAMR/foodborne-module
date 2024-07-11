@@ -32,13 +32,14 @@ if (install_libraries)
 
 library(readxl)       # for reading excel files
 library(ggplot2)      # for plotting
-library(dplyr)
+library(dplyr)        # for plotting
+library(tidyr)        # for plotting
 library(reshape2)
 library(ggrepel)
 library(gridExtra)
 library(ggfortify)
 library(here)         # for script sourcing issues
-library(mc2d)
+library(mc2d)         # for truncated distributions
 library(MCSim)
 library(stats)
 library(EnvStats)

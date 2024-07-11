@@ -1,5 +1,4 @@
 ## Production module
-#TODO: create environment w/ argument Runs
 
 #flock prevalence of AMR 
 data$Prev_f <- data$Prev_farm_type
@@ -28,12 +27,22 @@ data$P_pos <- data$P_ccwf + data$P_ccbf - (data$P_ccwf * data$P_ccbf)
 
 #Prevalence of externally contaminated birds after transport
 data$Prev_prod <- ifelse(data$B_flock_status=="p", 
-                         data$Prev_wfp_ext + (1- data$Prev_wfp_ext) * data$P_pos,
+                         data$Prev_wfp_ext + (1 - data$Prev_wfp_ext) * data$P_pos,
                          data$P_ccbf)
-data$Prev_prod <- ifelse(data$Prev_prod >1,1, data$Prev_prod)
+data$Prev_prod <- ifelse(data$Prev_prod > 1, 1, data$Prev_prod)
 
 #Number of bacteria on positive birds exterior after transport
 data$C_prod <- ifelse(data$B_flock_status=="p", 
                       data$C_btp * data$F_transp,  
                       data$C_prod_n)
 
+## Store outputs
+
+output$B_flock_status <- data$B_flock_status
+output$load           <- data$C_barn
+output$prev           <- data$Prev_farm_type
+output$Prev_init      <- data$Prev_wfp_col_base
+output$C_prod         <- data$C_prod
+output$Prev_prod      <- data$Prev_prod
+  
+  

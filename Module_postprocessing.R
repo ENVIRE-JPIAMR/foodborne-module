@@ -1,5 +1,4 @@
 ## Post-processing module
-#TODO: create environment w/ argument Runs
 
 ############################################
 ## Retail, transport & home storage stage ##
@@ -96,3 +95,10 @@ data$C_pproc <- ifelse(data$C_pack < 1,
 data$Prev_pproc <- ifelse(data$C_pproc == 1,
                           data$Prev_proc * (1- dpois(0, data$C_pproc)),
                           data$Prev_proc)
+
+## Store outputs
+
+output$C_pproc    <- data$C_pproc
+output$Prev_pproc <- data$Prev_pproc
+  
+  

@@ -1,5 +1,4 @@
 ## Processing module
-#TODO: create environment w/ argument Runs
 
 ####################
 ## Scalding stage ##
@@ -159,3 +158,16 @@ data$C_proc <- ifelse(
   data$C_chill,
   data$C_chill * data$P_skin * data$Prop_cm * data$Prop_product
 ) 
+
+## Store outputs
+
+output$Prev_scald <- data$Prev_scald
+output$C_scald    <- data$C_scald
+output$Prev_df    <- data$Prev_df 
+output$C_df       <- data$C_df
+output$Prev_ev    <- data$Prev_ev
+output$C_ev       <- data$C_ev
+output$C_wash     <- data$C_wash
+output$C_chill    <- data$C_chill
+output$Prev_proc  <- data$Prev_proc
+output$C_proc     <- data$C_proc
