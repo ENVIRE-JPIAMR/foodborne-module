@@ -7,6 +7,8 @@ source(here::here("utilities/prob_dist.R"))
 
 estimate_variables <- function(outputData, input, N){
   
+  sim_param <- simulate_params()
+    
   for(i in 1:nrow(input)){
     
     if(is.na(input$Distribution[i]) | input$Distribution[i] =="None" ){
@@ -26,21 +28,21 @@ estimate_variables <- function(outputData, input, N){
       
     }else if (input$Distribution[i] =="Normal"){
       if(input$Truncated[i]=="Yes"){
-        outputData$variable <- rnormt(N, min=input$Min[i], max=input$Max[i], input$Mean_Mode[i], input$SD[i])
+        outputData$variable <- sim_param$rnormt(N, min=input$Min[i], max=input$Max[i], input$Mean_Mode[i], input$SD[i])
       }else {
         outputData$variable <- rnorm(N, input$Mean_Mode[i], input$SD[i])
       }
       
     }else if (input$Distribution[i]== "Beta"){
       if(input$Truncated[i]=="Yes"){
-        outputData$variable <- rbetat(N,min=input$Min[i], max=input$Max[i],shape1=input$Other[i],shape2=input$Other2[i])
+        outputData$variable <- sim_param$rbetat(N,min=input$Min[i], max=input$Max[i],shape1=input$Other[i],shape2=input$Other2[i])
       }else {
         outputData$variable <- rbeta(N,shape1=input$Other[i],shape2=input$Other2[i])
       }
       
     }else if (input$Distribution[i]== "Poisson"){
       if(input$Truncated[i]=="Yes"){
-        outputData$variable <- rpoist(N, min=input$Min[i], max=input$Max[i], input$Other[i])
+        outputData$variable <- sim_param$rpoist(N, min=input$Min[i], max=input$Max[i], input$Other[i])
       }else {
         outputData$variable <- rpois(N, input$Other[i])
       }
@@ -53,7 +55,7 @@ estimate_variables <- function(outputData, input, N){
       
     }else if (input$Distribution[i] =="Laplace"){
       if(input$Truncated[i]=="Yes"){
-        outputData$variable <- rtrunclaplace(N, mean=input$Mean_Mode[i], scale=input$Other[i], lower=input$Min[i], upper=input$Max[i])
+        outputData$variable <- sim_param$rtrunclaplace(N, mean=input$Mean_Mode[i], scale=input$Other[i], lower=input$Min[i], upper=input$Max[i])
       }else {
         outputData$variable <- rlaplace(N, mu=input$Mean_Mode[i], sigma=input$Other[i])
       }
@@ -67,21 +69,21 @@ estimate_variables <- function(outputData, input, N){
       
     }else if (input$Distribution[i] =="LogLogistic" ){
       if(input$Truncated[i] =="Yes"){
-        outputData$variable <- rllogt(N, shape=input$Other[i], scale=input$Other2[i], min=input$Min[i], max=input$Max[i])
+        outputData$variable <- sim_param$rllogt(N, shape=input$Other[i], scale=input$Other2[i], min=input$Min[i], max=input$Max[i])
       }else {
         outputData$variable <- rllog(N, shape=input$Other[i], scale=input$Other2[i])
       }
       
     }else if (input$Distribution[i] =="Shifted LogLogistic" ){
       if(input$Truncated[i] =="Yes"){
-        outputData$variable <-  rllog3t(N, shape=input$Other[i], scale=input$Other2[i], thres=input$Other3[i], min=input$Min[i], max=input$Max[i])
+        outputData$variable <-  sim_param$rllog3t(N, shape=input$Other[i], scale=input$Other2[i], thres=input$Other3[i], min=input$Min[i], max=input$Max[i])
       }else {
         outputData$variable <- rllog3(N, shape=input$Other[i], scale=input$Other2[i], thres=input$Other3[i])
       }
       
     }else if (input$Distribution[i] =="Gamma"){
       if(input$Truncated[i] =="Yes"){
-        outputData$variable <- rgammat(N, min=input$Min[i], max=input$Max[i], shape=input$Other[i], scale=input$Other2[i])
+        outputData$variable <- sim_param$rgammat(N, min=input$Min[i], max=input$Max[i], shape=input$Other[i], scale=input$Other2[i])
       }else {
         outputData$variable <- rgamma(N, shape=input$Other[i], scale=input$Other2[i])
       }
