@@ -1,0 +1,74 @@
+---
+title: "QMRA of ESBL E. coli in farm-to-fork chain"
+output:
+  pdf_document:
+    citation_package: natbib
+    keep_tex: true
+    fig_width: 6
+    fig_height: 3
+bibliography: reference.bib
+---
+
+This notebook presents some empirical results based the farm-to-fork QMRA 
+simulator. 
+
+```{r, include=FALSE}
+source(here::here("load_libraries.R"))
+source(here::here("utilities/estimate_variables.R"))
+source(here::here("utilities/visualization.R"))
+
+## Initialization
+
+Runs <- 10000 # number of simulation to be performed
+
+# Create dataframe with specified number of rows and column names
+data <- data.frame(matrix(1:Runs, nrow = Runs, ncol = 1))
+colnames(data) <- "Runs"
+output <- data
+
+# Load estimated variables metadata
+input <- read_excel("../data-input/estimated_variables.xlsx")
+
+# Simulation of estimated variables
+data <- estimate_variables(data, input, N=Runs)
+
+# Risk calculation for each module
+source(here::here("Module_production.R"))
+source(here::here("Module_processing.R"))
+source(here::here("Module_postprocessing.R"))
+source(here::here("Module_homepreparation.R"))
+```
+
+
+```{r, include=TRUE, warning=FALSE}
+# Plot outputs
+plot_load(output, plot_all = FALSE)
+plot_prev(output, plot_all = FALSE)
+```
+
+The first figure demonstrates the evolution of average bacteria load or the mean 
+number of ESBL producing E. coli on broiler carcasses/portinos (upto/afterwards the 
+chilling stage). The confidence intervals are based on $2.5 -97.5 \%$ empirical 
+quantiles.
+
+```{r, include=TRUE}
+plot_histogram_and_ecdf(output$C_home_cook, "final load")
+plot_histogram_and_ecdf(output$Prev_home_cook, "final prevalence")
+plot_histogram_and_ecdf(output$prob_carrier*output$Prev_home_cook, "batch risk")
+```
+
+
+```{r, include=FALSE}
+# Compute QoIs
+load_avg <- format(mean(output$C_home_cook), digits = 2, scientific = TRUE)
+prev_avg <- format(mean(output$Prev_home_cook), digits = 2, scientific = TRUE)
+risk_avg <- format(mean(output$prob_carrier*output$Prev_home_cook), digits = 2, scientific = TRUE)
+```
+
+
+- The average number of ESBL E. coli on a chicken protion is: `r sprintf("variable: %s", load_avg)`
+- The average proportion of home cooked contaminated chicken protion is: `r sprintf("variable: %s", prev_avg)`
+- The average probability of becoming a ESBL E. coli carrier from chicken protion consumption is: `r sprintf("variable: %s", risk_avg)`
+
+
+
