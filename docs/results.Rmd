@@ -1,25 +1,17 @@
 ---
-title: "QMRA of ESBL E. coli in farm-to-fork chain"
-output:
-  pdf_document:
-    citation_package: natbib
-    keep_tex: true
-    fig_width: 6
-    fig_height: 3
-bibliography: reference.bib
+title: "R Notebook"
+output: html_notebook
 ---
 
-This notebook presents some empirical results based the farm-to-fork QMRA 
-simulator. 
-
 ```{r, include=FALSE}
-source(here::here("load_libraries.R"))
-source(here::here("utilities/estimate_variables.R"))
-source(here::here("utilities/visualization.R"))
+source(here::here("foodborne-module/load_libraries.R"))
+source(here::here("foodborne-module/utilities/estimate_variables.R"))
+source(here::here("foodborne-module/utilities/visualization.R"))
+source(here::here("farm-module/run_farm_module_parallel.R"))
 
 ## Initialization
 
-Runs <- 10000 # number of simulation to be performed
+Runs <- 1000 # number of simulation to be performed
 
 # Create dataframe with specified number of rows and column names
 data <- data.frame(matrix(1:Runs, nrow = Runs, ncol = 1))
@@ -27,48 +19,345 @@ colnames(data) <- "Runs"
 output <- data
 
 # Load estimated variables metadata
-input <- read_excel("../data-input/estimated_variables.xlsx")
+input <- read_excel(here("foodborne-module/data-input/estimated_variables.xlsx"))
 
 # Simulation of estimated variables
 data <- estimate_variables(data, input, N=Runs)
 
+# Run farm module to get initial load and prevalence
+parallel_output <- batch_simulator_parallel(n_sim = Runs)
+
+data$C_barn <- parallel_output[36, 1,]
+data$Prev_wfp_col_base <- parallel_output[36, 2,]
+
 # Risk calculation for each module
-source(here::here("Module_production.R"))
-source(here::here("Module_processing.R"))
-source(here::here("Module_postprocessing.R"))
-source(here::here("Module_homepreparation.R"))
+source(here::here("foodborne-module/Module_production.R"))
+source(here::here("foodborne-module/Module_processing.R"))
+source(here::here("foodborne-module/Module_postprocessing.R"))
+source(here::here("foodborne-module/Module_homepreparation.R"))
 ```
-
-
+## Concentration of ESBL *E. coli*
 ```{r, include=TRUE, warning=FALSE}
 # Plot outputs
+plot_load(output, plot_all = FALSE, flock = FALSE)
 plot_load(output, plot_all = FALSE)
-plot_prev(output, plot_all = FALSE)
+plot_load(output, plot_all = TRUE)
 ```
+- These figures demonstrate the evolution of average bacteria load or the mean 
+number of ESBL producing *E. coli* on broiler carcasses/portinos (upto/afterwards the 
+chilling stage). 
+- $1000$ independent Monte Carlo runs of the QMRA model were performed and the 
+confidence intervals are based on $2.5 -97.5 \%$ empiricalquantiles.
+- The figures show high skewness of the final concentration $C_{\rm home}$ after
+home cooking.
 
-The first figure demonstrates the evolution of average bacteria load or the mean 
-number of ESBL producing E. coli on broiler carcasses/portinos (upto/afterwards the 
-chilling stage). The confidence intervals are based on $2.5 -97.5 \%$ empirical 
-quantiles.
+### Summary statistics of concentration $C_{\rm home}$
+```{r, include=FALSE}
+# Filter outputs
+output_p <- output %>%
+  filter(B_flock_status == "p")
+
+output_p_1plus <- output %>%
+  filter(B_flock_status == "p" & C_home_cook > 1)
+
+output_n <- output %>%
+  filter(B_flock_status == "n")
+
+output_n_1plus <- output %>%
+  filter(B_flock_status == "n" & C_home_cook > 1)
+
+
+load_df <- data.frame(
+  Count = c(
+    length(output$C_home_cook),
+    length(output_p$C_home_cook),
+    length(output_p_1plus$C_home_cook),
+    length(output_n$C_home_cook),
+    length(output_n_1plus$C_home_cook)
+  ),
+  Mean = c(
+    mean(output$C_home_cook),
+    mean(output_p$C_home_cook),
+    mean(output_p_1plus$C_home_cook),
+    mean(output_n$C_home_cook),
+    mean(output_n_1plus$C_home_cook)
+  ),
+  Median = c(
+    median(output$C_home_cook),
+    median(output_p$C_home_cook),
+    median(output_p_1plus$C_home_cook),
+    median(output_n$C_home_cook),
+    median(output_n_1plus$C_home_cook)
+  ),
+  Q5 = c(
+    quantile(output$C_home_cook, 0.05),
+    quantile(output_p$C_home_cook, 0.05),
+    quantile(output_p_1plus$C_home_cook, 0.05),
+    quantile(output_n$C_home_cook, 0.05),
+    quantile(output_n_1plus$C_home_cook, 0.05)
+  ),
+  Q95 = c(
+    quantile(output$C_home_cook, 0.95),
+    quantile(output_p$C_home_cook, 0.95),
+    quantile(output_p_1plus$C_home_cook, 0.95),
+    quantile(output_n$C_home_cook, 0.95),
+    quantile(output_n_1plus$C_home_cook, 0.95)
+  ),
+  Max = c(
+    max(output$C_home_cook),
+    max(output_p$C_home_cook),
+    max(output_p_1plus$C_home_cook),
+    max(output_n$C_home_cook),
+    max(output_n_1plus$C_home_cook)
+  )
+)
+
+rowname_list <- c("All", "+ flock", "+ flock, C_home > 1", "- flock", "- flock, C_home > 1")
+rownames(load_df) <- rowname_list
+```
 
 ```{r, include=TRUE}
-plot_histogram_and_ecdf(output$C_home_cook, "final load")
-plot_histogram_and_ecdf(output$Prev_home_cook, "final prevalence")
-plot_histogram_and_ecdf(output$prob_carrier*output$Prev_home_cook, "batch risk")
+library(knitr)
+kable(load_df, caption = "Final concentration after home cooking")
+```
+- The table shows summary statistics for different classes based on initial flock 
+status (positive/negative) or higher $C_{\rm home} > 1$ values.
+- Significant difference between the mean and the median is observed;
+
+## Prevalence of contaminated broilers/portions
+```{r, include=TRUE, warning=FALSE}
+plot_prev(output, plot_all = FALSE, flock = FALSE)
+plot_prev(output, plot_all = FALSE)
+plot_prev(output, plot_all = TRUE)
 ```
 
+- These figures demonstrate the evolution of flock prevalence among the broiler 
+carcasses/portinos (upto/afterwards the chilling stage).
+- The summary statistics of final prevalence $P_{\rm home}$ after home cooking, 
+in chicken portions are comparable with results from FSA.
 
+### Summary statistics of prevalence $P_{\rm home}$
 ```{r, include=FALSE}
-# Compute QoIs
-load_avg <- format(mean(output$C_home_cook), digits = 2, scientific = TRUE)
-prev_avg <- format(mean(output$Prev_home_cook), digits = 2, scientific = TRUE)
-risk_avg <- format(mean(output$prob_carrier*output$Prev_home_cook), digits = 2, scientific = TRUE)
+prev_df <- data.frame(
+  Count = c(length(output$Prev_home_cook),
+            length(output_p$Prev_home_cook),
+            length(output_n$Prev_home_cook)),
+  Mean = c(format(mean(output$Prev_home_cook), digits = 2),
+           format(mean(output_p$Prev_home_cook), digits = 2),
+           format(mean(output_n$Prev_home_cook), digits = 2)),
+  Median = c(format(median(output$Prev_home_cook), digits = 2),
+             format(median(output_p$Prev_home_cook), digits = 2),
+             format(median(output_n$Prev_home_cook), digits = 2)),
+  Q5 = c(format(quantile(output$Prev_home_cook, 0.05), digits = 2),
+         format(quantile(output_p$Prev_home_cook, 0.05), digits = 2),
+         format(quantile(output_n$Prev_home_cook, 0.05), digits = 2)),
+  Q95 = c(format(quantile(output$Prev_home_cook, 0.95), digits = 2),
+          format(quantile(output_p$Prev_home_cook, 0.95), digits = 2),
+          format(quantile(output_n$Prev_home_cook, 0.95), digits = 2)),
+  Max = c(format(max(output$Prev_home_cook), digits = 2),
+          format(max(output_p$Prev_home_cook), digits = 2),
+          format(max(output_n$Prev_home_cook), digits = 2))
+)
+
+rownames(prev_df) <- c("All", "+ flock", "- flock")
 ```
+```{r, include=TRUE}
+kable(prev_df, caption = "Final prevalence after home cooking")
+```
+## Computation of risk
 
+For the computation of risk we first define the following events:
 
-- The average number of ESBL E. coli on a chicken protion is: `r sprintf("variable: %s", load_avg)`
-- The average proportion of home cooked contaminated chicken protion is: `r sprintf("variable: %s", prev_avg)`
-- The average probability of becoming a ESBL E. coli carrier from chicken protion consumption is: `r sprintf("variable: %s", risk_avg)`
+- $E_{\rm carrier}$: A consumer gets the ESBL *E. coli* carriership from consuming
+a chicken portion from a particular flock that is produced by a production 
+process characterized by the set of input parameters $\theta$.
+- $E_{\rm consum}$: A consumer consumes a contaminated chicken portion from a
+particular batch characterized by $\theta$.
+
+Further define $P_{\rm carrier}(c_{\rm home})$ that denotes the probability of 
+getting the ESBL *E. coli* carriership from consuming a chicken portion 
+contaminated with $c_{\rm home}$ bacterias,
+$$
+\begin{aligned}
+P_{\rm carrier}(c_{\rm home}) &= P[E_{\rm carrier} \vert E_{\rm consum}, c_{\rm home}]\\
+&= \mathbb{E}[\mathbf{1}_{E_{\rm carrier}} \vert \mathbf{1}_{E_{\rm consum}}=1, c_{\rm home}].\\
+\end{aligned}
+$$
+This probability is modeled using a Beta-Poisson dose response model as proposed by Furusawa et al.(2024),
+$$
+P_{\rm carrier}(C_{\rm home}) = 1-(1+\frac{C_{\rm home}}{\omega})^{-\alpha}.
+$$
+Now we derive the conditional risk per portion denoted by 
+$R^{\rm portion}(P_{\rm home}, C_{\rm home})$, which is the probability of getting
+the ESBL *E. coli* carriership from chicken protion consumption, from a particular
+flock characterized by $P_{\rm home}$ and $C_{\rm home}$.
+
+$$
+\begin{aligned}
+R^{\rm portion}(p_{\rm home}, c_{\rm home}) &= P[E_{\rm carrier} \vert 
+P_{\rm home} = p_{\rm home}, C_{\rm home} = c_{\rm home}]\\
+&= \mathbb{E}[\mathbf{1}_{E_{\rm carrier}} \vert p_{\rm home}, c_{\rm home}] \\
+&= \mathbb{E}\left[\mathbb{E}\left[\mathbf{1}_{E_{\rm carrier}} \vert \mathbf{1}_{E_{\rm consum}}, p_{\rm home}, c_{\rm home} \right] \vert p_{\rm home}, c_{\rm home}\right] \\
+&= \mathbb{E}[\mathbf{1}_{E_{\rm carrier}} \vert \mathbf{1}_{E_{\rm consum}}=1, p_{\rm home}, c_{\rm home}] \cdot P[\mathbf{1}_{E_{\rm consum}}=1 \vert p_{\rm home}, c_{\rm home}]\\ &+ 0 \cdot P[\mathbf{1}_{E_{\rm consum}}=0 \vert p_{\rm home}, c_{\rm home}]\\
+&= P_{\rm carrier}(c_{\rm home}) \cdot p_{\rm home} 
+\end{aligned}
+$$
+
+Now the ultimate QoI, the risk $R^{\rm portion}_{\theta}$ per portion of getting 
+the ESBL *E. coli* carriership from consumption of a chicken portion from a flock 
+characterized by $\theta$ is given by,
+
+$$
+\begin{aligned}
+R^{\rm portion}_{\theta} &= P[E_{\rm carrier}] \\
+&= \mathbb{E}[\mathbf{1}_{E_{\rm carrier}}] \\
+&= \mathbb{E}\left[\mathbb{E}\left[\mathbf{1}_{E_{\rm carrier}} \vert P_{\rm home}, C_{\rm home}\right]\right] \\
+&= \mathbb{E}[R^{\rm portion}(P_{\rm home}, C_{\rm home})] \\
+&= \int P_{\rm carrier}(c_{\rm home}) \cdot p_{\rm home} \cdot p(p_{\rm home}, c_{\rm home}) \cdot \rm{d}p_{\rm home}\rm{d}c_{\rm home} 
+\end{aligned}
+$$
+$R^{\rm portion}_{\theta}$ can be estimated using simple Monte Carlo integration
+method, as shown in the following table. 
+```{r, include=FALSE}
+risk_df <- data.frame(
+  Count = c(
+    length(output$prob_carrier * output$Prev_home_cook),
+    length(output_p$prob_carrier * output_p$Prev_home_cook),
+    length(output_p_1plus$prob_carrier * output_p_1plus$Prev_home_cook),
+    length(output_n$prob_carrier * output_n$Prev_home_cook),
+    length(output_n_1plus$prob_carrier * output_n_1plus$Prev_home_cook)
+  ),
+  Mean = c(
+    format(mean(
+      output$prob_carrier * output$Prev_home_cook
+    ), digits = 2),
+    format(
+      mean(output_p$prob_carrier * output_p$Prev_home_cook),
+      digits = 2
+    ),
+    format(
+      mean(output_p_1plus$prob_carrier * output_p_1plus$Prev_home_cook),
+      digits = 2
+    ),
+    format(
+      mean(output_n$prob_carrier * output_n$Prev_home_cook),
+      digits = 2
+    ),
+    format(
+      mean(output_n_1plus$prob_carrier * output_n_1plus$Prev_home_cook),
+      digits = 2
+    )
+  ),
+  Median = c(
+    format(median(
+      output$prob_carrier * output$Prev_home_cook
+    ), digits = 2),
+    format(
+      median(output_p$prob_carrier * output_p$Prev_home_cook),
+      digits = 2
+    ),
+    format(
+      median(output_p_1plus$prob_carrier * output_p_1plus$Prev_home_cook),
+      digits = 2
+    ),
+    format(
+      median(output_n$prob_carrier * output_n$Prev_home_cook),
+      digits = 2
+    ),
+    format(
+      median(output_n_1plus$prob_carrier * output_n_1plus$Prev_home_cook),
+      digits = 2
+    )
+  ),
+  Q5 = c(
+    format(
+      quantile(output$prob_carrier * output$Prev_home_cook, 0.05),
+      digits = 2
+    ),
+    format(
+      quantile(output_p$prob_carrier * output_p$Prev_home_cook, 0.05),
+      digits = 2
+    ),
+    format(
+      quantile(
+        output_p_1plus$prob_carrier * output_p_1plus$Prev_home_cook,
+        0.05
+      ),
+      digits = 2
+    ),
+    format(
+      quantile(output_n$prob_carrier * output_n$Prev_home_cook, 0.05),
+      digits = 2
+    ),
+    format(
+      quantile(
+        output_n_1plus$prob_carrier * output_n_1plus$Prev_home_cook,
+        0.05
+      ),
+      digits = 2
+    )
+  ),
+  Q95 = c(
+    format(
+      quantile(output$prob_carrier * output$Prev_home_cook, 0.95),
+      digits = 2
+    ),
+    format(
+      quantile(output_p$prob_carrier * output_p$Prev_home_cook, 0.95),
+      digits = 2
+    ),
+    format(
+      quantile(
+        output_p_1plus$prob_carrier * output_p_1plus$Prev_home_cook,
+        0.95
+      ),
+      digits = 2
+    ),
+    format(
+      quantile(output_n$prob_carrier * output_n$Prev_home_cook, 0.95),
+      digits = 2
+    ),
+    format(
+      quantile(
+        output_n_1plus$prob_carrier * output_n_1plus$Prev_home_cook,
+        0.95
+      ),
+      digits = 2
+    )
+  ),
+  Max = c(
+    format(max(
+      output$prob_carrier * output$Prev_home_cook
+    ), digits = 2),
+    format(max(
+      output_p$prob_carrier * output_p$Prev_home_cook
+    ), digits = 2),
+    format(
+      max(output_p_1plus$prob_carrier * output_p_1plus$Prev_home_cook),
+      digits = 2
+    ),
+    format(max(
+      output_n$prob_carrier * output_n$Prev_home_cook
+    ), digits = 2),
+    format(
+      max(output_n_1plus$prob_carrier * output_n_1plus$Prev_home_cook),
+      digits = 2
+    )
+  )
+)
+
+rownames(risk_df) <- rowname_list
+```
+```{r, include=TRUE}
+kable(risk_df, caption = "Summary statistics of Risk")
+```
+However given the skewness of the distribution (as shown by the next figure) of 
+$R^{\rm portion}(P_{\rm home}, C_{\rm home})$ more suitable measure of risk can
+be envisaged, namely, super quantiles. 
+
+```{r}
+plot_histogram_and_ecdf(output$prob_carrier*output$Prev_home_cook, "cond. risk")
+```
 
 
 
