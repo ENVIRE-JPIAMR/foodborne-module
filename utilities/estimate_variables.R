@@ -1,4 +1,4 @@
-source(here::here("utilities/prob_dist.R"))
+source(here::here("foodborne-module/utilities/prob_dist.R"))
 
 ## Function to simulate (estimate) variables
 ## Arguments: outputData := Output Dataframe to be merged with inputData
