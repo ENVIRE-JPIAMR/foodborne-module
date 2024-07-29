@@ -13,7 +13,7 @@ source(here::here("farm-module/run_farm_module_parallel.R"))
 
 ## Initialization
 
-Runs <- 1000 # number of simulation to be performed
+Runs <- 5000 # number of simulation to be performed
 
 # Create dataframe with specified number of rows and column names
 data <- data.frame(matrix(1:Runs, nrow = Runs, ncol = 1))
@@ -29,7 +29,7 @@ data <- estimate_variables(data, input, N=Runs)
 # Run farm module to get initial load and prevalence
 parallel_output <- batch_simulator_parallel(n_sim = Runs)
 
-data$C_barn <- parallel_output[36, 1,]
+data$C_barn <- c(parallel_output[36, 1,]/(parallel_output[36, 4,]+1000)) #TODO: inputs$litter_mass = 1000 hard coded)
 data$Prev_wfp_col_base <- parallel_output[36, 2,]
 
 # Risk calculation for each module
@@ -380,7 +380,7 @@ data <- estimate_variables(data, input, N=Runs)
 # Run farm module to get initial load and prevalence
 parallel_output_phages <- batch_simulator_parallel(n_sim = Runs, phages = TRUE)
 
-data$C_barn <- parallel_output_phages[36, 1,]
+data$C_barn <- c(parallel_output_phages[36, 1,]/(parallel_output_phages[36, 4,]+1000)) #TODO: inputs$litter_mass = 1000 hard coded)
 data$Prev_wfp_col_base <- parallel_output_phages[36, 2,]
 
 # Risk calculation for each module
