@@ -537,5 +537,175 @@ kable(risk_df_phages, caption = "Summary statistics of Risk with phages")
 ```{r}
 plot_histogram_and_ecdf(output$prob_carrier*output$Prev_home_cook, "cond. risk (phages)")
 ```
+## Phytptherapy intervention
 
+We apply the phytotherapy intervention and compute the risk reduction.
+```{r, include=FALSE}
 
+phyto_red_factor <- c(
+  "5g_thyme" = 0.5,
+  "5g_0.3ml_thyme" = 0.8,
+  "5g_rosemary" = 0.85,
+  "0.3ml_thyme" = 0.85,
+  "5g_0.3ml_rosemary" = 0.85,
+  "0.3ml_rosemary" = 0.9
+)
+
+data <- data_baseline
+output <- output_baseline
+data$Prev_wfp_col_base <- parallel_output[36, 2,]*phyto_red_factor["0.3ml_rosemary"]
+
+# Risk calculation for each module
+source(here::here("foodborne-module/Module_production.R"))
+source(here::here("foodborne-module/Module_processing.R"))
+source(here::here("foodborne-module/Module_postprocessing.R"))
+source(here::here("foodborne-module/Module_homepreparation.R"))
+
+# Filter outputs
+output_p <- output %>%
+  filter(B_flock_status == "p")
+
+output_p_1plus <- output %>%
+  filter(B_flock_status == "p" & C_home_cook > 1)
+
+output_n <- output %>%
+  filter(B_flock_status == "n")
+
+output_n_1plus <- output %>%
+  filter(B_flock_status == "n" & C_home_cook > 1)
+
+risk_df_phyto <- data.frame(
+  Count = c(
+    length(output$prob_carrier * output$Prev_home_cook),
+    length(output_p$prob_carrier * output_p$Prev_home_cook),
+    length(output_p_1plus$prob_carrier * output_p_1plus$Prev_home_cook),
+    length(output_n$prob_carrier * output_n$Prev_home_cook),
+    length(output_n_1plus$prob_carrier * output_n_1plus$Prev_home_cook)
+  ),
+  Mean = c(
+    format(mean(
+      output$prob_carrier * output$Prev_home_cook
+    ), digits = 2),
+    format(
+      mean(output_p$prob_carrier * output_p$Prev_home_cook),
+      digits = 2
+    ),
+    format(
+      mean(output_p_1plus$prob_carrier * output_p_1plus$Prev_home_cook),
+      digits = 2
+    ),
+    format(
+      mean(output_n$prob_carrier * output_n$Prev_home_cook),
+      digits = 2
+    ),
+    format(
+      mean(output_n_1plus$prob_carrier * output_n_1plus$Prev_home_cook),
+      digits = 2
+    )
+  ),
+  Median = c(
+    format(median(
+      output$prob_carrier * output$Prev_home_cook
+    ), digits = 2),
+    format(
+      median(output_p$prob_carrier * output_p$Prev_home_cook),
+      digits = 2
+    ),
+    format(
+      median(output_p_1plus$prob_carrier * output_p_1plus$Prev_home_cook),
+      digits = 2
+    ),
+    format(
+      median(output_n$prob_carrier * output_n$Prev_home_cook),
+      digits = 2
+    ),
+    format(
+      median(output_n_1plus$prob_carrier * output_n_1plus$Prev_home_cook),
+      digits = 2
+    )
+  ),
+  Q5 = c(
+    format(
+      quantile(output$prob_carrier * output$Prev_home_cook, 0.05),
+      digits = 2
+    ),
+    format(
+      quantile(output_p$prob_carrier * output_p$Prev_home_cook, 0.05),
+      digits = 2
+    ),
+    format(
+      quantile(
+        output_p_1plus$prob_carrier * output_p_1plus$Prev_home_cook,
+        0.05
+      ),
+      digits = 2
+    ),
+    format(
+      quantile(output_n$prob_carrier * output_n$Prev_home_cook, 0.05),
+      digits = 2
+    ),
+    format(
+      quantile(
+        output_n_1plus$prob_carrier * output_n_1plus$Prev_home_cook,
+        0.05
+      ),
+      digits = 2
+    )
+  ),
+  Q95 = c(
+    format(
+      quantile(output$prob_carrier * output$Prev_home_cook, 0.95),
+      digits = 2
+    ),
+    format(
+      quantile(output_p$prob_carrier * output_p$Prev_home_cook, 0.95),
+      digits = 2
+    ),
+    format(
+      quantile(
+        output_p_1plus$prob_carrier * output_p_1plus$Prev_home_cook,
+        0.95
+      ),
+      digits = 2
+    ),
+    format(
+      quantile(output_n$prob_carrier * output_n$Prev_home_cook, 0.95),
+      digits = 2
+    ),
+    format(
+      quantile(
+        output_n_1plus$prob_carrier * output_n_1plus$Prev_home_cook,
+        0.95
+      ),
+      digits = 2
+    )
+  ),
+  Max = c(
+    format(max(
+      output$prob_carrier * output$Prev_home_cook
+    ), digits = 2),
+    format(max(
+      output_p$prob_carrier * output_p$Prev_home_cook
+    ), digits = 2),
+    format(
+      max(output_p_1plus$prob_carrier * output_p_1plus$Prev_home_cook),
+      digits = 2
+    ),
+    format(max(
+      output_n$prob_carrier * output_n$Prev_home_cook
+    ), digits = 2),
+    format(
+      max(output_n_1plus$prob_carrier * output_n_1plus$Prev_home_cook),
+      digits = 2
+    )
+  )
+)
+
+rownames(risk_df_phyto) <- rowname_list
+```
+```{r, include=TRUE}
+kable(risk_df_phyto, caption = "Summary statistics of Risk with phytotherapy")
+```
+```{r}
+plot_histogram_and_ecdf(output$prob_carrier*output$Prev_home_cook, "cond. risk (phytotherapy)")
+```
