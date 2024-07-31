@@ -182,7 +182,7 @@ plot_prev <- function(data, plot_all = TRUE, flock = TRUE) {
 }
 
 # Function for visualizing distribution
-plot_histogram_and_ecdf <- function(variable_values, var_name, bins = 10) {
+plot_histogram_and_ecdf <- function(variable_values, var_name, bins = 10, qq = FALSE) {
   
   # Convert the input list to a data frame
   data <- data.frame(variable_values)
@@ -199,6 +199,17 @@ plot_histogram_and_ecdf <- function(variable_values, var_name, bins = 10) {
     labs(title = paste("ECDF of", var_name), x = "Variable Values", y = "ECDF") +
     theme_minimal()
   
-  # Display plots side by side
-  grid.arrange(histogram_plot, ecdf_plot, ncol = 2)
+  # Create QQ plot
+  qq_plot <- ggplot(data, aes(sample = variable_values)) +
+    stat_qq(color = "blue") +
+    stat_qq_line(color = "red") +
+    labs(title = paste("QQ Plot of", var_name), x = "Theoretical Quantiles", y = "Sample Quantiles") +
+    theme_minimal()
+  
+  # Display plots based on the qq argument
+  if (qq) {
+    grid.arrange(qq_plot, ecdf_plot, ncol = 2)
+  } else {
+    grid.arrange(histogram_plot, ecdf_plot, ncol = 2)
+  }
 }

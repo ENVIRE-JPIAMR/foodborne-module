@@ -13,7 +13,7 @@ source(here::here("farm-module/run_farm_module_parallel.R"))
 
 ## Initialization
 
-Runs <- 5000 # number of simulation to be performed
+Runs <- 10000 # number of simulation to be performed
 
 # Create dataframe with specified number of rows and column names
 data <- data.frame(matrix(1:Runs, nrow = Runs, ncol = 1))
@@ -358,9 +358,9 @@ $R^{\rm portion}(P_{\rm home}, C_{\rm home})$ more suitable measure of risk can
 be envisaged, namely, super quantiles. 
 
 ```{r}
-plot_histogram_and_ecdf(output$prob_carrier*output$Prev_home_cook, "cond. risk")
+plot_histogram_and_ecdf(output$prob_carrier*output$Prev_home_cook, "conditional risk")
+plot_histogram_and_ecdf(output$prob_carrier*output$Prev_home_cook, "conditional risk", qq = TRUE)
 ```
-
 ## Phages intervention
 
 We apply the phages intervention and compute the risk reduction.
@@ -709,3 +709,5 @@ kable(risk_df_phyto, caption = "Summary statistics of Risk with phytotherapy")
 ```{r}
 plot_histogram_and_ecdf(output$prob_carrier*output$Prev_home_cook, "cond. risk (phytotherapy)")
 ```
+
+
