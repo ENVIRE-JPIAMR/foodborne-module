@@ -22,14 +22,14 @@ plot_load <- function(data, plot_all = TRUE, flock = TRUE) {
   
   if (plot_all) {
     gg <- ggplot(data = data_long, aes(x = step, y = log10(value), color = color, group = Runs)) +
-      labs(title = "Bacteria load over production stages",
-           subtitle = paste0("initial avg. load: ", round(log10(mean(data$load)), 2), " log10 CFU/g and farm prevalence: ", round(mean(data$prev), 2)),
+      labs(title = "Bacteria load on carcass/portion over production stages",
+           subtitle = paste0("average barn load for +ve flocks: ", round(log10(mean(data$load)), 2), " log10 CFU/g with ", length(data$Runs), " MC runs"),
            x = "Stages",
            y = "log10 CFU") +
       theme_minimal() +
       geom_line() +
       geom_point() +
-      scale_color_manual(values = c("red" = "red", "blue" = "blue"), labels = c("red" = "positive", "blue" = "negative"), name = "Flock Status")
+      scale_color_manual(values = c("red" = "red", "blue" = "blue"), labels = c("red" = paste0("positive (", round(mean(data$prev), 2)*100, "%)"), "blue" = paste0("negative (", (1-round(mean(data$prev), 2))*100, "%)")), name = "Flock Status")
       
   } else {
     # Calculate summary statistics for plotting
@@ -61,8 +61,8 @@ plot_load <- function(data, plot_all = TRUE, flock = TRUE) {
       geom_line(aes(y = mean_value, linetype = "Mean"), size = 1) +
       geom_line(aes(y = median_value, linetype = "Median"), size = 1) +
       geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci, fill = color), alpha = 0.3) +  # Confidence bands
-      labs(title = "Bacteria load over production stages",
-           subtitle = paste0("initial avg. load: ", round(log10(mean(data$load)), 2), " log10 CFU/g and farm prevalence: ", round(mean(data$prev), 2)),
+      labs(title = "Bacteria load on carcass/portion over production stages",
+           subtitle = paste0("average barn load for +ve flocks: ", round(log10(mean(data$load)), 2), " log10 CFU/g with ", length(data$Runs), " MC runs"),
            x = "Stages",
            y = "log10 CFU") +
       scale_linetype_manual(values = c("Mean" = "solid", "Median" = "dotted"), name = "Statistic")
@@ -70,7 +70,7 @@ plot_load <- function(data, plot_all = TRUE, flock = TRUE) {
     if (flock) {
       gg <- gg + 
         scale_color_manual(values = c("red" = "red", "blue" = "blue"), name = "Flock Status",
-                           labels = c("red" = "positive", "blue" = "negative")) +
+                           labels = c("red" = paste0("positive (", round(mean(data$prev), 2)*100, "%)"), "blue" = paste0("negative (", (1-round(mean(data$prev), 2))*100, "%)"))) +
         scale_fill_manual(values = c("red" = "red", "blue" = "blue"), guide = "none")
     } else {
       gg <- gg + 
@@ -111,8 +111,8 @@ plot_prev <- function(data, plot_all = TRUE, flock = TRUE) {
   
   if (plot_all) {
     gg <- ggplot(data = data_long, aes(x = step, y = value, color = color, group = Runs)) +
-      labs(title = "Flock prevalence over production stages",
-           subtitle = paste0("initial flock prevalence: ", round(mean(data$Prev_init), 2)),
+      labs(title = "Prevalence of infected carcass/portion over production stages",
+           subtitle = paste0("average initial prevalence for +ve flocks: ", round(mean(data$init_prev), 2), " with ", length(data$Runs), " MC runs"),
            x = "Stages",
            y = "Prevalence") +
       theme_minimal() +
@@ -120,7 +120,7 @@ plot_prev <- function(data, plot_all = TRUE, flock = TRUE) {
       geom_point()
     
     if (flock) {
-      gg <- gg + scale_color_manual(values = c("red" = "red", "blue" = "blue"), labels = c("red" = "positive", "blue" = "negative"), name = "Flock Status")
+      gg <- gg + scale_color_manual(values = c("red" = "red", "blue" = "blue"), labels = c("red" = paste0("positive (", round(mean(data$prev), 2)*100, "%)"), "blue" = paste0("negative (", (1-round(mean(data$prev), 2))*100, "%)")), name = "Flock Status")
     } else {
       gg <- gg + scale_color_manual(values = c("black" = "black"), labels = c("black" = "all"), name = "Flock Status")
     }
@@ -155,15 +155,15 @@ plot_prev <- function(data, plot_all = TRUE, flock = TRUE) {
       geom_line(aes(y = mean_value, linetype = "Mean"), linewidth = 1) +
       geom_line(aes(y = median_value, linetype = "Median"), linewidth = 1) +
       geom_ribbon(aes(ymin = lower_ci, ymax = upper_ci, fill = color), alpha = 0.3) +  # Confidence bands
-      labs(title = "Flock prevalence over production stages",
-           subtitle = paste0("initial flock prevalence: ", round(mean(data$Prev_init), 2)),
+      labs(title = "Prevalence of infected carcass/portion over production stages",
+           subtitle = paste0("average initial prevalence for +ve flocks: ", round(mean(data$init_prev), 2), " with ", length(data$Runs), " MC runs"),
            x = "Stages",
            y = "Prevalence") +
       scale_linetype_manual(values = c("Mean" = "solid", "Median" = "dotted"), name = "Statistic")
     
     if (flock) {
       gg <- gg + 
-        scale_color_manual(values = c("red" = "red", "blue" = "blue"), labels = c("red" = "positive", "blue" = "negative"), name = "Flock Status") +
+        scale_color_manual(values = c("red" = "red", "blue" = "blue"), labels = c("red" = paste0("positive (", round(mean(data$prev), 2)*100, "%)"), "blue" = paste0("negative (", (1-round(mean(data$prev), 2))*100, "%)")), name = "Flock Status") +
         scale_fill_manual(values = c("red" = "red", "blue" = "blue"), guide = "none")
     } else {
       gg <- gg + 

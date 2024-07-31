@@ -41,7 +41,7 @@ data$C_prod <- ifelse(data$B_flock_status=="p",
 output$B_flock_status <- data$B_flock_status
 output$load           <- data$C_barn
 output$prev           <- data$Prev_farm_type
-output$Prev_init      <- data$Prev_wfp_col_base
+output$init_prev      <- data$Prev_wfp_col_base
 output$C_prod         <- data$C_prod
 output$Prev_prod      <- data$Prev_prod
   
