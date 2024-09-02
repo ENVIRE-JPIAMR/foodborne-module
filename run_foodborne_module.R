@@ -1,7 +1,6 @@
 source(here::here("foodborne-module/load_libraries.R"))
 source(here::here("foodborne-module/utilities/estimate_variables.R"))
 source(here::here("foodborne-module/utilities/visualization.R"))
-source(here::here("farm-module/load_libraries.R"))
 source(here::here("farm-module/run_farm_module_parallel.R"))
 
 ## Initialization
