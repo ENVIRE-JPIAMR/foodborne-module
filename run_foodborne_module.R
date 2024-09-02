@@ -1,6 +1,7 @@
 source(here::here("foodborne-module/load_libraries.R"))
 source(here::here("foodborne-module/utilities/estimate_variables.R"))
 source(here::here("foodborne-module/utilities/visualization.R"))
+source(here::here("farm-module/load_libraries.R"))
 source(here::here("farm-module/run_farm_module_parallel.R"))
 
 ## Initialization
@@ -21,7 +22,10 @@ data <- estimate_variables(data, input, N=Runs)
 # Run farm module to get initial load and prevalence
 parallel_output <- batch_simulator_parallel(n_sim = Runs)
 
-data$C_barn <- parallel_output[36, 1,]
+# Load farm module inputs
+input_list_farm = load_inputs()
+
+data$C_barn <- parallel_output[36, 1,]/(parallel_output[36, 4,] + input_list_farm$farm_size * input_list_farm$litter_mass)
 data$Prev_wfp_col_base <- parallel_output[36, 2,]
 
 # Risk calculation for each module
