@@ -26,6 +26,10 @@ estimate_variables <- function(outputData, input, N){
     }else if (input$Distribution[i]== "Pert"){
       outputData$variable <- rpert(N, input$Min[i], input$Mean_Mode[i], input$Max[i])
       
+    }else if (input$Distribution[i] =="LogNormal3" ){
+      #ref. O'Flaherty et al. (2019)
+      outputData$variable <- rlnorm(N, meanlog=input$Mean_Mode[i], sdlog=input$SD[i]) + input$Other[i]
+      
     }else if (input$Distribution[i] =="Normal"){
       if(input$Truncated[i]=="Yes"){
         outputData$variable <- sim_param$rnormt(N, min=input$Min[i], max=input$Max[i], input$Mean_Mode[i], input$SD[i])
@@ -91,7 +95,7 @@ estimate_variables <- function(outputData, input, N){
     }
     
     colnames(outputData)[ncol(outputData)]<- input$Variable[i] 
-    
+
   }
   
   outputData

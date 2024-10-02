@@ -7,8 +7,14 @@ data$Prev_f <- data$Prev_farm_type
 data$B_flock_status <- rbinom(Runs, 1, data$Prev_f)
 data$B_flock_status <- ifelse(data$B_flock_status == 1,"p","n")
 
-#Prevalence of birds from positive flock internally colonized at pre-harvest(within flock prevalence)
-data$Prev_wfp_col <- data$Prev_wfp_col_base 
+data$C_barn <- ifelse(data$B_flock_status == "p",
+                      data$C_barn,
+                      0)
+
+#Prevalence of birds internally colonized at pre-harvest(within flock prevalence)
+data$Prev_wfp_col <- ifelse(data$B_flock_status == "p",
+                            data$Prev_wfp_col_base,
+                            0)
 
 #number of bacteria on positive birds exterior at pre-harvest
 data$C_btp <- data$C_barn * data$Amount_fec 
@@ -41,8 +47,10 @@ data$C_prod <- ifelse(data$B_flock_status=="p",
 output$B_flock_status <- data$B_flock_status
 output$load           <- data$C_barn
 output$prev           <- data$Prev_farm_type
-output$init_prev      <- data$Prev_wfp_col_base
+output$Amount_fec     <- data$Amount_fec 
+output$init_prev      <- data$Prev_wfp_col
 output$C_prod         <- data$C_prod
 output$Prev_prod      <- data$Prev_prod
+
   
   

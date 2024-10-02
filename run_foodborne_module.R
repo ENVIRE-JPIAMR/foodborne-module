@@ -6,6 +6,7 @@ source(here::here("farm-module/run_farm_module_parallel.R"))
 ## Initialization
 
 Runs <- 100 # number of simulation to be performed
+plot <- FALSE
 
 # Create dataframe with specified number of rows and column names
 data <- data.frame(matrix(1:Runs, nrow = Runs, ncol = 1))
@@ -18,7 +19,7 @@ input <- read_excel(here("foodborne-module/data-input/estimated_variables.xlsx")
 # Simulation of estimated variables
 data <- estimate_variables(data, input, N=Runs)
 
-# Run farm module to get initial load and prevalence
+# Run farm module (all positive flocks) to get initial load and prevalence
 parallel_output <- batch_simulator_parallel(n_sim = Runs)
 
 # Load farm module inputs
@@ -34,14 +35,16 @@ source(here::here("foodborne-module/Module_postprocessing.R"))
 source(here::here("foodborne-module/Module_homepreparation.R"))
 
 # Plot outputs
-plot_load(output, plot_all = FALSE)
-plot_prev(output, plot_all = FALSE)
-plot_histogram_and_ecdf(output$C_home_cook, "final load")
-plot_histogram_and_ecdf(output$Prev_home_cook, "final prevalence")
-plot_histogram_and_ecdf(output$prob_carrier*output$Prev_home_cook, "batch risk")
+if(plot == TRUE) {
+  plot_load(output, plot_all = FALSE)
+  plot_prev(output, plot_all = FALSE)
+  plot_histogram_and_ecdf(output$C_home_cook, "final load")
+  plot_histogram_and_ecdf(output$Prev_home_cook, "final prevalence")
+  plot_histogram_and_ecdf(output$prob_carrier * output$Prev_home_cook, "batch risk")
+}
 
 message("The average risk is: ", format(mean(output$prob_carrier*output$Prev_home_cook), digits = 2, scientific = TRUE))
 
 # Save outputs
-write.table(data, file = paste0("data-output/output.csv"), sep = ';', row.names = FALSE, col.names = TRUE)
+write.table(data, file = paste0("foodborne-module/data-output/output.csv"), sep = ';', row.names = FALSE, col.names = TRUE)
 
