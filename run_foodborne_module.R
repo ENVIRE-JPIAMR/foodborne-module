@@ -5,7 +5,7 @@ source(here::here("farm-module/run_farm_module_parallel.R"))
 
 ## Initialization
 
-Runs <- 100 # number of simulation to be performed
+Runs <- 1000 # number of simulation to be performed
 plot <- FALSE
 
 # Create dataframe with specified number of rows and column names
@@ -46,5 +46,5 @@ if(plot == TRUE) {
 message("The average risk is: ", format(mean(output$prob_carrier*output$Prev_home_cook), digits = 2, scientific = TRUE))
 
 # Save outputs
-write.table(data, file = paste0("foodborne-module/data-output/output.csv"), sep = ';', row.names = FALSE, col.names = TRUE)
+# write.table(data, file = paste0("foodborne-module/data-output/output.csv"), sep = ';', row.names = FALSE, col.names = TRUE)
 
