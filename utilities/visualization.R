@@ -1,6 +1,10 @@
 ## Function for visualization
 
-# Function to plot load
+# Function to plot load over different stages
+# Arguments: data     := output df of the occupational module
+#            plot_all := if TRUE, plots individual simulations
+#                        else, plots mean, median and empirical CIs
+#            flock    := if True, distinguishes positive and negative plots
 plot_load <- function(data, plot_all = TRUE, flock = TRUE) {
   
   # Extract the order of steps based on the original dataframe columns
@@ -89,7 +93,11 @@ plot_load <- function(data, plot_all = TRUE, flock = TRUE) {
   return(gg)
 }
 
-# Function to plot prevalence
+# Function to plot prevalence over different stages
+# Arguments: data     := output df of the occupational module
+#            plot_all := if TRUE, plots individual simulations
+#                        else, plots mean, median and empirical CIs
+#            flock    := if True, distinguishes positive and negative plots
 plot_prev <- function(data, plot_all = TRUE, flock = TRUE) {
   
   # Extract the order of steps based on the original dataframe columns
