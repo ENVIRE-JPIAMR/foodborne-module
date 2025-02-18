@@ -6,7 +6,8 @@ source(here::here("farm-module/run_farm_module_parallel.R"))
 ## Initialization
 
 Runs <- 1000 # number of simulation to be performed
-plot <- FALSE
+plot <- TRUE
+farm_size <- 300
 
 # Create dataframe with specified number of rows and column names
 data <- data.frame(matrix(1:Runs, nrow = Runs, ncol = 1))
@@ -20,10 +21,11 @@ input <- read_excel(here("foodborne-module/data-input/estimated_variables.xlsx")
 data <- estimate_variables(data, input, N=Runs)
 
 # Run farm module (all positive flocks) to get initial load and prevalence
-parallel_output <- batch_simulator_parallel(n_sim = Runs)
+parallel_output <-
+  batch_simulator_parallel(farm_module = new.farm_module(input_list = load_inputs(input_manual = list("farm_size"= farm_size))), n_sim = Runs)
 
 # Load farm module inputs
-input_list_farm = load_inputs()
+input_list_farm = load_inputs(input_manual = list("farm_size"= farm_size))
 
 data$C_barn <- parallel_output[36, 1,]/(parallel_output[36, 4,] + input_list_farm$farm_size * input_list_farm$litter_mass)
 data$Prev_wfp_col_base <- parallel_output[36, 2,]
