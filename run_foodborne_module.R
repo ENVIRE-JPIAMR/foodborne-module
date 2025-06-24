@@ -5,7 +5,7 @@ source(here::here("farm-module/run_farm_module_parallel.R"))
 
 ## Initialization
 
-Runs <- 1000 # number of simulation to be performed
+Runs <- 10000 # number of simulation to be performed
 plot <- TRUE
 farm_size <- 300
 
@@ -45,7 +45,11 @@ if(plot == TRUE) {
   plot_histogram_and_ecdf(output$prob_carrier * output$Prev_home_cook, "batch risk")
 }
 
-message("The average risk is: ", format(mean(output$prob_carrier*output$Prev_home_cook), digits = 2, scientific = TRUE))
+message("The average risk is: ", format(mean(output$prob_carrier*output$Prev_home_cook)/mean(output$Prev_home_cook), digits = 2, scientific = TRUE))
+message("\nThe average of numerator is: ", format(mean(output$prob_carrier*output$Prev_home_cook), digits = 2, scientific = TRUE))
+message("\nThe average of denominator is: ", format(mean(output$Prev_home_cook), digits = 2, scientific = TRUE))
+message("\nThe SD of numerator is: ", format(sd(output$prob_carrier*output$Prev_home_cook), digits = 2, scientific = TRUE))
+message("\nThe SD of denominator is: ", format(sd(output$Prev_home_cook), digits = 2, scientific = TRUE))
 
 # Save outputs
 # write.table(data, file = paste0("foodborne-module/data-output/output.csv"), sep = ';', row.names = FALSE, col.names = TRUE)

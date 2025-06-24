@@ -221,3 +221,39 @@ plot_histogram_and_ecdf <- function(variable_values, var_name, bins = 10, qq = F
     grid.arrange(histogram_plot, ecdf_plot, ncol = 2)
   }
 }
+
+# function to plot farm module outputs
+plot_farm_module_outputs <- function(parallel_output) {
+
+  C_36 <- parallel_output[36, 1,]/(parallel_output[36, 4,] + input_list_farm$farm_size * input_list_farm$litter_mass)
+  P_36 <- parallel_output[36, 2,]
+  
+  C_28 <- parallel_output[28, 1,]/(parallel_output[28, 4,] + input_list_farm$farm_size * input_list_farm$litter_mass)
+  P_28 <- parallel_output[28, 2,]
+  
+  message("Average barn concentration (CFU/g) on day 36: ", format(mean(C_36), digits = 2, scientific = TRUE))
+  message("Average prevalence on day 36: ", mean(P_36))
+  message("Average barn concentration (CFU/g) on day 28: ", format(mean(C_28), digits = 2, scientific = TRUE))
+  message("Average prevalence on day 28: ", mean(P_28))
+  message("SD of barn concentration (CFU/g) on day 36: ", format(sd(C_36), digits = 2, scientific = TRUE))
+  message("SD of prevalence on day 36: ", format(sd(P_36), digits = 2, scientific = TRUE))
+  message("SD of barn concentration (CFU/g) on day 28: ", format(sd(C_28), digits = 2, scientific = TRUE))
+  message("SD of prevalence on day 28: ", format(sd(P_28), digits = 2, scientific = TRUE))
+  
+  # Set up 1 row, 2 columns
+  par(mfrow = c(1, 2), oma = c(0, 0, 3, 0))  # oma adds outer margin for the main title
+  
+  # Plot histograms with scientific notation on x-axis
+  hist(C_28, breaks = 30, col = "seagreen",
+       main = "Day 28: Thinning",
+       xlab = "concentration (CFU/g)", ylab = "Frequency", xaxt = "n")
+  axis(1, at = axTicks(1), labels = format(axTicks(1), scientific = TRUE))
+  
+  hist(C_36, breaks = 30, col = "steelblue",
+       main = "Day 36: Clearing",
+       xlab = "concentration (CFU/g)", ylab = "Frequency", xaxt = "n")
+  axis(1, at = axTicks(1), labels = format(axTicks(1), scientific = TRUE))
+  
+  # Add a common main title
+  mtext("ESBL E. coli concentration in barn environment", outer = TRUE, cex = 1.5)
+}
